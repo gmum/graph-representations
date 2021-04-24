@@ -12,7 +12,7 @@ We find that not all atomic features are equally usefull and that removing some 
 
 ![Image](img/wilcoxon.png)
 
-P-values of one-tailed Wilcoxon tests between the best models trained on each representation. The value in $i$-th row and $j$-th column corresponds to the alternative hypothesis saying that the median squared error of $i$-th representation is greater than the median of $j$-th representation (superior representations have darker columns, and inferior ones have darker rows). The darkest cells are statistically significant with Bonferroni correction.
+P-values of one-tailed Wilcoxon tests between the best models trained on each representation. The value in i-th row and j-th column corresponds to the alternative hypothesis saying that the median squared error of i-th representation is greater than the median of j-th representation (superior representations have darker columns, and inferior ones have darker rows). The darkest cells are statistically significant with Bonferroni correction.
 
 ## How to use this code
 
