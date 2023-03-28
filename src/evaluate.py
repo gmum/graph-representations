@@ -10,13 +10,16 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+import traceback
+
 logger = logging.getLogger('')
 
 def linreg(x, y):
     '''Computes a linear regression through the origin using OLS'''
     x = np.array(x)
     y = np.array(y)
-    x = x[:, np.newaxis]
+    if len(x.shape) == 1:
+        x = x[:, np.newaxis]
     a, _, _, _ = np.linalg.lstsq(x, y, rcond=-1.)
     return a
 
@@ -43,6 +46,7 @@ def rocauc_plot(true, pred, set_label, saving_directory):
 
         return rocauc_score
     except Exception as e:
+        logger.error(traceback.print_exc())
         logger.error(e)
         return 99999
 
@@ -54,7 +58,7 @@ def parity_plot(true, pred, set_label, saving_directory):
         min_y = np.min((true, pred))
         max_y = np.max((true, pred))
 
-        # casting to float because float32 is not JSON-serializable
+        # casting to float, because the default is float32 which is then not json serialisable
         mse = float(mean_squared_error(true, pred))
         mae = float(mean_absolute_error(true, pred))
         a = linreg(true, pred)  # predicted v observed
@@ -78,12 +82,14 @@ def parity_plot(true, pred, set_label, saving_directory):
 
         return mse, mae
     except Exception as e:
+        logger.error(traceback.print_exc())
         logger.error(e)
         return 99999, 99999
 
 
-def test_model(model, data, device, fpath, calculate_parity=True, calculate_rocauc=True,):
-    """Evaluate model's performance.
+def test_model(model, data, device, fpath, calculate_parity: bool = True, calculate_rocauc: bool = True,
+               predict_func=predict):
+    """This function evaluates model performance using test data.
 
     inputs:
         model - the trained torch model
@@ -111,8 +117,8 @@ def test_model(model, data, device, fpath, calculate_parity=True, calculate_roca
 
     # MAKE PREDICTIONS
     for data_loder in loaders:
-        this_true_ys, this_pred_ys = predict(model, data_loder, device)
-
+        this_true_ys, this_pred_ys = predict_func(model, data_loder, device)
+        
         true_ys.append(this_true_ys)
         pred_ys.append(this_pred_ys)
 
@@ -127,7 +133,7 @@ def test_model(model, data, device, fpath, calculate_parity=True, calculate_roca
             if calculate_rocauc:
                 rocauc[set_part] = rocauc_plot(ys, preds, set_part, saving_directory=fpath)
 
-    # SAVE EVERYTHING
+    # SAVING EVERYTHING
     timestamp = time.strftime('%Y-%m-%d-%H-%M')
     # save mse_mae
     if calculate_parity:
@@ -141,7 +147,7 @@ def test_model(model, data, device, fpath, calculate_parity=True, calculate_roca
 
     # Save predictions for each set
     all_smiles = (smiles_train, smiles_val, smiles_test)
-
+ 
     for set_part, smiles, true_y, pred_y in zip(set_part_names, all_smiles, true_ys, pred_ys):
         with open(os.path.join(fpath, f"{timestamp}-{set_part}.predictions"), 'w') as fid:
             fid.write('test entry\tsmiles\tactual\tpredicted\tactual - predicted\n')

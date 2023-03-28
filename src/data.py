@@ -8,14 +8,16 @@ from torch_geometric.data import Data
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem import MolFromSmiles
+from typing import Optional, List, Union
 
-from dmpnn_utils import MolGraph
 
-
-def load_dataset(filepaths, smiles_index, y_index, skip_line=False, delimiter=',', scale=None, average=None,
-                 neighbours=False, total_num_hs=False, formal_charge=False, is_in_ring=False, is_aromatic=False,
-                 get_positions=False, dmpnn_representation=False, cheminet_representation=False,
-                 deepchemstable_representation=False, duvenaud_representation=False):
+def load_dataset(filepaths, smiles_index, y_index, skip_line: bool = False, delimiter: str = ',',
+                 scale: Optional[str] = None, average: Optional[str] = None,
+                 neighbours: bool = False, total_num_hs: bool = False,
+                 formal_charge: bool = False, is_in_ring: bool = False, 
+                 is_aromatic: bool = False, get_positions: bool = False,
+                 dmpnn_representation: bool = False, cheminet_representation: bool = False, 
+                 deepchemstable_representation: bool = False, duvenaud_representation: bool = False):
     """
     Load dataset from csv, calculate representation of each entry, return a dataset
     :param filepaths: list: paths to csv files with data
@@ -32,7 +34,13 @@ def load_dataset(filepaths, smiles_index, y_index, skip_line=False, delimiter=',
     :param is_aromatic: bool: use aromaticity as a feature?
     :return: (torch_geometric.data.Data, list ) - data_set, smiles
     """
-
+    # strict type checking
+    for param in [skip_line, neighbours, total_num_hs, formal_charge, is_in_ring,
+                  is_aromatic, get_positions, dmpnn_representation, cheminet_representation,
+                  deepchemstable_representation, duvenaud_representation]:
+        assert isinstance(param, bool), f"Param should be bool, is {type(param)} with value {param}."
+    
+    
     smiles, labels = load_data_from_df(filepaths, smiles_index, y_index, skip_line, delimiter, scale, average)
 
     data_set, smiles = load_data_from_smiles(smiles, labels, neighbours=neighbours, total_num_hs=total_num_hs,
@@ -45,7 +53,9 @@ def load_dataset(filepaths, smiles_index, y_index, skip_line=False, delimiter=',
     return data_set, smiles
 
 
-def load_data_from_df(dataset_paths, smiles_index, y_index, skip_line=False, delimiter=',', scale=None, average=None):
+def load_data_from_df(dataset_paths, smiles_index: int, y_index: int,
+                      skip_line: bool = False, delimiter: str = ',',
+                      scale: Optional[str] = None, average: Optional[str] = None):
     """
     Load multiple files from csvs, concatenate and return smiles and ys
     :param dataset_paths: list: paths to csv files with data
@@ -54,9 +64,10 @@ def load_data_from_df(dataset_paths, smiles_index, y_index, skip_line=False, del
     :param skip_line: boolean: True if the first line of the file contains column names, False otherwise
     :param delimiter: delimeter used in csv
     :param scale: should y be scaled? (useful with skewed distributions of y)
-    :param average: if the same SMILES appears multiple times how should its label be averaged?
+    :param average: if the same SMILES appears multiple times how should its values be averaged?
     :return: (smiles, labels) - np.arrays
     """
+    assert isinstance(skip_line, bool), f"skip_line should be bool, is {type(param)} with value {param}."
 
     # column names present in files?
     header = 0 if skip_line else None
@@ -102,41 +113,44 @@ def load_data_from_df(dataset_paths, smiles_index, y_index, skip_line=False, del
     return data_x, data_y
 
 
-def load_data_from_smiles(x_smiles, labels, neighbours=False,
-                          total_num_hs=False, formal_charge=False,
-                          is_in_ring=False, is_aromatic=False,
-                          get_positions=False, dmpnn_representation=False,
-                          cheminet_representation=False,
-                          deepchemstable_representation=False,
+def load_data_from_smiles(x_smiles, labels, neighbours: bool = False,
+                          total_num_hs: bool = False, formal_charge: bool = False,
+                          is_in_ring: bool = False, is_aromatic: bool = False, 
+                          get_positions: bool = False,
+                          dmpnn_representation: bool = False, 
+                          cheminet_representation: bool = False,
+                          deepchemstable_representation: bool = False,
                           duvenaud_representation=False):
-    """Calculate representation of molecules in the dataset."""
+    # strict type checking
+    for param in [neighbours, total_num_hs, formal_charge, is_in_ring, is_aromatic,
+                  get_positions, dmpnn_representation, cheminet_representation,
+                  deepchemstable_representation, duvenaud_representation]:
+        assert isinstance(param, bool), f"Param should be bool, is {type(param)} with value {param}."
+    
     x_all, y_all, smiles_all = [], [], []
     for smiles, label in zip(x_smiles, labels):
         try:
             if len(smiles) < 2:
                 raise ValueError
-
+                
             mol = MolFromSmiles(smiles)
-
+            
             if get_positions:
                 mol = Chem.AddHs(mol)
                 AllChem.EmbedMolecule(mol)
                 AllChem.UFFOptimizeMolecule(mol)
                 mol = Chem.RemoveHs(mol)
-
+                
             afm, adj, mat_positions = featurize_mol(mol, neighbours=neighbours,
                                                     total_num_hs=total_num_hs,
                                                     formal_charge=formal_charge,
                                                     is_in_ring=is_in_ring,
                                                     is_aromatic=is_aromatic,
                                                     get_positions=get_positions,
+                                                    dmpnn_representation=dmpnn_representation,
                                                     cheminet_representation=cheminet_representation,
                                                     deepchemstable_representation=deepchemstable_representation,
                                                     duvenaud_representation=duvenaud_representation)
-
-            if dmpnn_representation:
-                graph = MolGraph(smiles)
-                afm = graph.f_atoms
 
             x_all.append([afm, adj, mat_positions])
             y_all.append([label])
@@ -144,22 +158,30 @@ def load_data_from_smiles(x_smiles, labels, neighbours=False,
         except ValueError as e:
             logging.warning('SMILES ({}) can not be converted to a graph.\nREASON: {}'.format(smiles, e))
 
-    data_set = transform_dataset_pg([[*i, j] for i, j in zip(x_all, y_all)])
+    data_set = transform_dataset_pg([[*i, j, smi] for i, j, smi in zip(x_all, y_all, smiles_all)])
     return data_set, smiles_all
 
 
-def featurize_mol(mol, neighbours=False, total_num_hs=False,
-                  formal_charge=False, is_in_ring=False, is_aromatic=False,
-                  get_positions=False, cheminet_representation=False,
-                  deepchemstable_representation=False,
-                  duvenaud_representation=False):
-    """Calculate features for a single molecule."""
-
-    if cheminet_representation:
+def featurize_mol(mol, neighbours: bool = False, total_num_hs: bool = False,
+                  formal_charge: bool = False, is_in_ring: bool = False, is_aromatic=False,
+                  get_positions: bool = False, dmpnn_representation: bool = False,
+                  cheminet_representation: bool = False, deepchemstable_representation: bool = False,
+                  duvenaud_representation: bool = False):
+    
+    # strict type checking
+    for param in [neighbours, total_num_hs, formal_charge, is_in_ring, is_aromatic,
+                  get_positions, dmpnn_representation, cheminet_representation,
+                  deepchemstable_representation, duvenaud_representation]:
+        assert isinstance(param, bool), f"Param should be bool, is {type(param)} with value {param}."
+    
+    if dmpnn_representation is True:
+        node_features = np.array([get_atom_features_dmpnn(atom) for atom in mol.GetAtoms()])
+    elif cheminet_representation is True:
         node_features = np.array([get_atom_features_chemi_net(atom) for atom in mol.GetAtoms()])
-    elif deepchemstable_representation:
+    elif deepchemstable_representation is True:
+        Chem.rdPartialCharges.ComputeGasteigerCharges(mol)
         node_features = np.array([get_atom_features_deep_chem_stable(atom) for atom in mol.GetAtoms()])
-    elif duvenaud_representation:
+    elif duvenaud_representation is True:
         node_features = np.array([get_atom_features_duvenaud(atom) for atom in mol.GetAtoms()])
     else:
         node_features = np.array(
@@ -187,10 +209,11 @@ def featurize_mol(mol, neighbours=False, total_num_hs=False,
     return node_features, adj_matrix, pos_matrix
 
 
-def get_atom_features(atom, neighbours=False, total_num_hs=False,
-                      formal_charge=False, is_in_ring=False, is_aromatic=False):
+def get_atom_features(atom, neighbours: bool = False,
+                      total_num_hs: bool = False, formal_charge: bool = False,
+                      is_in_ring=False, is_aromatic: bool = False):
     """
-    Calculate atom represntation.
+    Calculate feature vector for atom.
     :param atom: atom to featurise
     :param neighbours: bool: use number of neighbours as a feature?
     :param total_num_hs: bool: use total number of Hs as a feature?
@@ -199,6 +222,9 @@ def get_atom_features(atom, neighbours=False, total_num_hs=False,
     :param is_aromatic: bool: use aromaticity as a feature?
     :return: np.array of attributes - a vector representation of atom
     """
+    # strict type checking
+    for param in [neighbours, total_num_hs, formal_charge, is_in_ring, is_aromatic]:
+        assert isinstance(param, bool), f"Param should be bool, is {type(param)} with value {param}."
 
     attributes = []
     attributes += one_hot_vector(atom.GetAtomicNum(), [5, 6, 7, 8, 9, 15, 16, 17, 35, 53, 999])
@@ -216,9 +242,59 @@ def get_atom_features(atom, neighbours=False, total_num_hs=False,
     return np.array(attributes, dtype=np.float32)
 
 
+def get_atom_features_dmpnn(atom: Chem.rdchem.Atom, functional_groups: List[int] = None) -> List[Union[bool, int, float]]:
+    """
+    Builds a feature vector for an atom.
+    :param atom: An RDKit atom.
+    :param functional_groups: A k-hot vector indicating the functional groups the atom belongs to.
+    :return: A list containing the atom features.
+    """
+    # Atom feature sizes
+    MAX_ATOMIC_NUM = 100
+    ATOM_FEATURES = {
+        'atomic_num': list(range(MAX_ATOMIC_NUM)),
+        'degree': [0, 1, 2, 3, 4, 5],
+        'formal_charge': [-1, -2, 1, 2, 0],
+        'chiral_tag': [0, 1, 2, 3],
+        'num_Hs': [0, 1, 2, 3, 4],
+        'hybridization': [
+            Chem.rdchem.HybridizationType.SP,
+            Chem.rdchem.HybridizationType.SP2,
+            Chem.rdchem.HybridizationType.SP3,
+            Chem.rdchem.HybridizationType.SP3D,
+            Chem.rdchem.HybridizationType.SP3D2
+        ],
+    }
+    
+    def onek_encoding_unk(value: int, choices: List[int]) -> List[int]:
+        """
+        Creates a one-hot encoding with an extra category for uncommon values.
+        :param value: The value for which the encoding should be one.
+        :param choices: A list of possible values.
+        :return: A one-hot encoding of the :code:`value` in a list of length :code:`len(choices) + 1`.
+                 If :code:`value` is not in :code:`choices`, then the final element in the encoding is 1.
+        """
+        encoding = [0] * (len(choices) + 1)
+        index = choices.index(value) if value in choices else -1
+        encoding[index] = 1
+        return encoding
+    
+    features = onek_encoding_unk(atom.GetAtomicNum() - 1, ATOM_FEATURES['atomic_num']) + \
+           onek_encoding_unk(atom.GetTotalDegree(), ATOM_FEATURES['degree']) + \
+           onek_encoding_unk(atom.GetFormalCharge(), ATOM_FEATURES['formal_charge']) + \
+           onek_encoding_unk(int(atom.GetChiralTag()), ATOM_FEATURES['chiral_tag']) + \
+           onek_encoding_unk(int(atom.GetTotalNumHs()), ATOM_FEATURES['num_Hs']) + \
+           onek_encoding_unk(int(atom.GetHybridization()), ATOM_FEATURES['hybridization']) + \
+           [1 if atom.GetIsAromatic() else 0] + \
+           [atom.GetMass() * 0.01]  # scaled to about the same range as other features
+    if functional_groups is not None:
+        features += functional_groups
+    return np.array(features, dtype=np.float32)
+
+
 def get_atom_features_chemi_net(atom):
     """
-    Calculate atom represntation.
+    Calculate feature vector for atom.
     :param atom: atom to featurise
     :return: np.array of attributes - a vector representation of atom
     """
@@ -226,17 +302,17 @@ def get_atom_features_chemi_net(atom):
 
     attributes = []
     attributes += one_hot_vector(atom.GetAtomicNum(), list(range(1,21)) + [35, 53, 999])
-
-    periodic_table.GetRvdw(atom.GetSymbol())
-    periodic_table.GetRcovalent(atom.GetSymbol())
-
+    
+    attributes.append(periodic_table.GetRvdw(atom.GetSymbol()))
+    attributes.append(periodic_table.GetRcovalent(atom.GetSymbol()))
+    
     attributes.append(atom.IsInRingSize(3))
     attributes.append(atom.IsInRingSize(4))
     attributes.append(atom.IsInRingSize(5))
     attributes.append(atom.IsInRingSize(6))
     attributes.append(atom.IsInRingSize(7))
     attributes.append(atom.IsInRingSize(8))
-
+    
     attributes.append(atom.GetIsAromatic())
     attributes.append(atom.GetFormalCharge())
 
@@ -245,24 +321,22 @@ def get_atom_features_chemi_net(atom):
 
 def get_atom_features_deep_chem_stable(atom):
     """
-    Calculate atom represntation.
+    Calculate feature vector for atom.
     :param atom: atom to featurise
     :return: np.array of attributes - a vector representation of atom
     """
-
     attributes = []
-
-    attributes += one_hot_vector(atom.GetSymbol(), ['C', 'N', 'O', 'S', 'F', 'Si', 'P', 'Cl', 'Br', 'I', 'B',   'H',  'Unknown'])
+    attributes += one_hot_vector(atom.GetSymbol(), ['C', 'N', 'O', 'S', 'F', 'Si', 'P', 'Cl', 'Br', 'I', 'B', 'H',  'Unknown'])
     attributes += one_hot_vector(atom.GetDegree(), [0, 1, 2, 3, 4, 5])
     attributes += one_hot_vector(atom.GetTotalNumHs(), [0, 1, 2, 3, 4])
     attributes += one_hot_vector(atom.GetImplicitValence(), [0, 1, 2, 3, 4, 5])
-
-    attributes.append(atom.GetIsAromatic())
+    
+    attributes.append(atom.GetIsAromatic()) 
     attributes.append(atom.GetFormalCharge())
     attributes.append(atom.GetNumRadicalElectrons())
-
+        
     attributes += one_hot_vector(atom.GetHybridization(), [Chem.rdchem.HybridizationType.SP, Chem.rdchem.HybridizationType.SP2, Chem.rdchem.HybridizationType.SP3, Chem.rdchem.HybridizationType. SP3D, Chem.rdchem.HybridizationType.SP3D2])
-
+    
     add_Gasteiger = float(atom.GetProp('_GasteigerCharge'))
     if np.isnan(add_Gasteiger) or np.isinf(add_Gasteiger):
         add_Gasteiger = 0.0
@@ -273,25 +347,23 @@ def get_atom_features_deep_chem_stable(atom):
 
 def get_atom_features_duvenaud(atom):
     """
-    Calculate atom represntation.
+    Calculate feature vector for atom.
     :param atom: atom to featurise
     :return: np.array of attributes - a vector representation of atom
     """
 
     attributes = []
-
-    attributes += one_hot_vector(atom.GetSymbol(), ['C', 'N', 'O', 'S', 'F', 'Si', 'P', 'Cl', 'Br', 'I', 'B',   'H',  'Unknown'])
-
+        
     attributes += one_hot_vector(atom.GetSymbol(), ['C', 'N', 'O', 'S', 'F', 'Si', 'P', 'Cl', 'Br', 'Mg', 'Na',
                                        'Ca', 'Fe', 'As', 'Al', 'I', 'B', 'V', 'K', 'Tl', 'Yb',
                                        'Sb', 'Sn', 'Ag', 'Pd', 'Co', 'Se', 'Ti', 'Zn', 'H',
                                        'Li', 'Ge', 'Cu', 'Au', 'Ni', 'Cd', 'In', 'Mn', 'Zr',
                                        'Cr', 'Pt', 'Hg', 'Pb', 'Unknown'])
-
+    
     attributes += one_hot_vector(atom.GetDegree(), [0, 1, 2, 3, 4, 5])
     attributes += one_hot_vector(atom.GetTotalNumHs(), [0, 1, 2, 3, 4])
     attributes += one_hot_vector(atom.GetImplicitValence(), [0, 1, 2, 3, 4, 5])
-
+    
     attributes.append(atom.GetIsAromatic())
 
     return np.array(attributes, dtype=np.float32)
@@ -310,14 +382,14 @@ def transform_dataset_pg(dataset):
 
 
 def transform_molecule_pg(mol):
-    afm, adj, positions, label = mol
+    afm, adj, positions, label, smi = mol
 
     x = torch.tensor(afm)
     y = torch.tensor(label)
     edge_index = torch.tensor(get_edge_indices(adj)).t().contiguous()
     pos = torch.tensor(positions) if positions else None
 
-    return Data(x=x, y=y, edge_index=edge_index, pos=pos)
+    return Data(x=x, y=y, edge_index=edge_index, pos=pos, smiles=smi)
 
 
 def get_edge_indices(adj):

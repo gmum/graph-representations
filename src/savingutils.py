@@ -15,16 +15,16 @@ def save_history(train_loss, valid_loss, fold_subdirectory):
         json.dump(hist, f)
 
 
-def save_configs(model_config, data_confg, representation_config, directory):
+def save_configs(model_config, data_config, representation_config, directory):
     """stores a copy of config files in the experiment dir"""
     timestamp = time.strftime('%Y-%m-%d-%H-%M')
-    for config_file in [model_config, data_confg, representation_config]:
+    for config_file in [model_config, data_config, representation_config]:
         filename = f"{timestamp}-{os.path.basename(config_file)}"
         shutil.copyfile(config_file, os.path.join(directory, filename))
 
 
 class LoggerWrapper:
-    def __init__(self, path='.'):
+    def __init__(self, path: str = '.'):
         """
         Wrapper for logging.
         Allows to replace sys.stderr.write so that error massages are redirected
@@ -59,7 +59,7 @@ class LoggerWrapper:
         self.console.setFormatter(formatter)
         self.logger.addHandler(self.console)
 
-    def log_errors(self, msg):
+    def log_errors(self, msg: str):
         """Bind this function to sys.stderr.write if you want the error massages
         to be redirected to sys.stdout and also saved in a file"""
         msg = msg.strip('\n')  # don't add extra newlines
