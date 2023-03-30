@@ -1,11 +1,11 @@
 import torch
 import numpy as np
 
-from config import csv_section, optimizer_section
-from data import load_data_from_df
+from graphrepr.config import csv_section, optimizer_section
+from graphrepr.data import load_data_from_df
 
-from chemprop.data_utils import filter_invalid_smiles
-from chemprop.data_data import MoleculeDatapoint, construct_molecule_batch, MoleculeDataLoader
+from graphrepr.chemprop.data_utils import filter_invalid_smiles
+from graphrepr.chemprop.data_data import MoleculeDatapoint, construct_molecule_batch, MoleculeDataLoader
 
 
 def load_data_chemprop(paths, data_config, model_config, shuffle=False, num_workers=1):

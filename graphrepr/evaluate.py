@@ -5,7 +5,7 @@ import json
 import logging
 import numpy as np
 from sklearn.metrics import roc_auc_score, roc_curve, mean_squared_error, mean_absolute_error
-from graphconv import predict
+from .graphconv import predict
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
