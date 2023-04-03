@@ -4,10 +4,13 @@ import torch.nn.functional as F
 from torch_geometric.nn import MessagePassing, global_mean_pool, GCNConv, BatchNorm
 from torch_geometric.utils import add_self_loops
 
+from typing import Optional
+
 
 class GraphConvNetwork(torch.nn.Module):
-    def __init__(self, conv_layers_num, dense_layers_num, model_dim, hidden_size, input_dim, output_dim,
-                 dropout=None, batchnorm=False):
+    def __init__(self, conv_layers_num: int, dense_layers_num: int, model_dim: int,
+                 hidden_size: int, input_dim: int, output_dim: int,
+                 dropout: Optional[float] = None, batchnorm: bool = False):
         """
         :param conv_layers_num: number of convolutional layers
         :param dense_layers_num: number of dense layers
@@ -62,33 +65,37 @@ class GraphConvNetwork(torch.nn.Module):
             self.dropouts = [torch.nn.Dropout(p=dropout) for _ in range(dense_layers_num - 1)]
             self.dropouts = torch.nn.ModuleList(self.dropouts)
 
-    def forward(self, data):
+    def forward(self, data=None, x=None, edge_index=None, batch=None):
+        if data is not None:
+            x, edge_index = data.x, data.edge_index
+            batch = data.batch
+            
         # conv (-> batchnorm) -> relu
         for i in range(self.conv_layers_num):
-            data.x = self.conv_layers[i](data.x, data.edge_index)  # TODO: co robi edge index?
+            x = self.conv_layers[i](x, edge_index)
             if self.conv_bn is not None:
-                data.x = self.conv_bn[i](data.x)
-            data.x = F.relu(data.x)
+                x = self.conv_bn[i](x)
+            x = F.relu(x)
 
         # pooling
-        data.x = global_mean_pool(data.x, data.batch)
+        x = global_mean_pool(x, batch)
 
         # dense (-> batchnorm) -> relu (-> dropout)
         for i in range(self.dense_layers_num - 1):
-            data.x = self.dense_layers[i](data.x)
+            x = self.dense_layers[i](x)
             if self.bn is not None:
-                data.x = self.bn[i](data.x)
-            data.x = F.relu(data.x)
+                x = self.bn[i](x)
+            x = F.relu(x)
             if self.dropouts is not None:
-                data.x = self.dropouts[i](data.x)
+                x = self.dropouts[i](x)
 
         # last dense
-        x = self.dense_layers[-1](data.x)  # TODO: no dobra, a jak będziemy chcieli softmax?
+        x = self.dense_layers[-1](x)
         return x
 
 
 def run_epoch(model, loss_function, optimizer, data_loader, device):
-    model.train()  # set the model in training mode (changes dropout and batchnorm layers' behaviour)
+    model.train()  # push model to the training mode (changes dropout and batchnorm layers' behaviour)
 
     cumulative_loss = 0
     for data in data_loader:
@@ -106,7 +113,7 @@ def run_epoch(model, loss_function, optimizer, data_loader, device):
 
 
 def predict(model, data_loader, device):
-    model.eval()  # set dropout and batchnorm layers to evaluation mode before running inference
+    model.eval()  # set dropout and batch normalization layers to evaluation mode before running inference
 
     pred_array = []
     true_array = []
