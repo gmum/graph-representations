@@ -41,15 +41,23 @@ The list of packages along with versions that we used is as follows:
 
 You can run this code with: `python src/main.py configs/models/1-model.cfg configs/data/rat.cfg configs/representations/1-repr.cfg results_dir`, where `configs/models/1-model.cfg` is a configuration file that defines  architecture, `configs/data/rat.cfg` defines which dataset will be used and `configs/representations/1-repr.cfg` defines the representation. The output files will be saved to a subdirectory created in `results_dir`.
 
+To run Wilcoxon tests and generate p-value heatmaps, use this command:
+
+```bash
+python wilcoxon.py --model [model name] --source [results directory]
+```
+
 ## Citation
 
 If you find our results useful, you can cite this work using the following BibTeX entry:
 
 ```
-@article{pocha2020comparison,
-  title={Comparison of Atom Representations in Graph Neural Networks for Molecular Property Prediction},
-  author={Pocha, Agnieszka and Danel, Tomasz and Maziarka, {\L}ukasz},
-  journal={arXiv preprint arXiv:2012.04444},
-  year={2020}
+@inproceedings{pocha2021comparison,
+  title={Comparison of atom representations in graph neural networks for molecular property prediction},
+  author={Pocha, Agnieszka and Danel, Tomasz and Podlewska, Sabina and Tabor, Jacek and Maziarka, {\L}ukasz},
+  booktitle={2021 International Joint Conference on Neural Networks (IJCNN)},
+  pages={1--8},
+  year={2021},
+  organization={IEEE}
 }
 ```
