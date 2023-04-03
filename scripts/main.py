@@ -5,12 +5,13 @@ import torch
 import torch.nn.functional as F
 from torch_geometric.data import DataLoader
 from sklearn.metrics import mean_squared_error
-from graphconv import run_epoch, predict, GraphConvNetwork
-from data import load_dataset
-from test import test_model
-from savingutils import save_configs, save_history, LoggerWrapper
-from config import parse_model_config, parse_representation_config, parse_data_config
-from config import utils_section, data_section, csv_section, params_section, optimizer_section
+
+from graphrepr.graphconv import run_epoch, predict, GraphConvNetwork
+from graphrepr.data import load_dataset
+from graphrepr.evaluate import test_model
+from graphrepr.savingutils import save_configs, save_history, LoggerWrapper
+from graphrepr.config import parse_model_config, parse_representation_config, parse_data_config
+from graphrepr.config import utils_section, data_section, csv_section, params_section, optimizer_section
 
 # run: python main.py model.cfg dataset.cfg representation.cfg /home/abc/results
 
