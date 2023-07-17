@@ -18,6 +18,7 @@ def load_dataset(filepaths, smiles_index, y_index, skip_line: bool = False, deli
                  is_aromatic: bool = False, get_positions: bool = False,
                  dmpnn_representation: bool = False, cheminet_representation: bool = False, 
                  deepchemstable_representation: bool = False, duvenaud_representation: bool = False):
+
     """
     Load dataset from csv, calculate representation of each entry, return a dataset
     :param filepaths: list: paths to csv files with data
@@ -34,6 +35,7 @@ def load_dataset(filepaths, smiles_index, y_index, skip_line: bool = False, deli
     :param is_aromatic: bool: use aromaticity as a feature?
     :return: (torch_geometric.data.Data, list ) - data_set, smiles
     """
+
     # strict type checking
     for param in [skip_line, neighbours, total_num_hs, formal_charge, is_in_ring,
                   is_aromatic, get_positions, dmpnn_representation, cheminet_representation,
@@ -56,6 +58,7 @@ def load_dataset(filepaths, smiles_index, y_index, skip_line: bool = False, deli
 def load_data_from_df(dataset_paths, smiles_index: int, y_index: int,
                       skip_line: bool = False, delimiter: str = ',',
                       scale: Optional[str] = None, average: Optional[str] = None):
+
     """
     Load multiple files from csvs, concatenate and return smiles and ys
     :param dataset_paths: list: paths to csv files with data
@@ -67,6 +70,7 @@ def load_data_from_df(dataset_paths, smiles_index: int, y_index: int,
     :param average: if the same SMILES appears multiple times how should its values be averaged?
     :return: (smiles, labels) - np.arrays
     """
+
     assert isinstance(skip_line, bool), f"skip_line should be bool, is {type(param)} with value {param}."
 
     # column names present in files?
@@ -212,6 +216,7 @@ def featurize_mol(mol, neighbours: bool = False, total_num_hs: bool = False,
 def get_atom_features(atom, neighbours: bool = False,
                       total_num_hs: bool = False, formal_charge: bool = False,
                       is_in_ring=False, is_aromatic: bool = False):
+
     """
     Calculate feature vector for atom.
     :param atom: atom to featurise
@@ -222,6 +227,7 @@ def get_atom_features(atom, neighbours: bool = False,
     :param is_aromatic: bool: use aromaticity as a feature?
     :return: np.array of attributes - a vector representation of atom
     """
+
     # strict type checking
     for param in [neighbours, total_num_hs, formal_charge, is_in_ring, is_aromatic]:
         assert isinstance(param, bool), f"Param should be bool, is {type(param)} with value {param}."
@@ -243,12 +249,14 @@ def get_atom_features(atom, neighbours: bool = False,
 
 
 def get_atom_features_dmpnn(atom: Chem.rdchem.Atom, functional_groups: List[int] = None) -> List[Union[bool, int, float]]:
+
     """
-    Builds a feature vector for an atom.
+    Builds a feature vector for an atom. (In the paper: Yang)
     :param atom: An RDKit atom.
     :param functional_groups: A k-hot vector indicating the functional groups the atom belongs to.
     :return: A list containing the atom features.
     """
+
     # Atom feature sizes
     MAX_ATOMIC_NUM = 100
     ATOM_FEATURES = {
@@ -267,6 +275,7 @@ def get_atom_features_dmpnn(atom: Chem.rdchem.Atom, functional_groups: List[int]
     }
     
     def onek_encoding_unk(value: int, choices: List[int]) -> List[int]:
+
         """
         Creates a one-hot encoding with an extra category for uncommon values.
         :param value: The value for which the encoding should be one.
@@ -274,6 +283,7 @@ def get_atom_features_dmpnn(atom: Chem.rdchem.Atom, functional_groups: List[int]
         :return: A one-hot encoding of the :code:`value` in a list of length :code:`len(choices) + 1`.
                  If :code:`value` is not in :code:`choices`, then the final element in the encoding is 1.
         """
+
         encoding = [0] * (len(choices) + 1)
         index = choices.index(value) if value in choices else -1
         encoding[index] = 1
@@ -293,11 +303,13 @@ def get_atom_features_dmpnn(atom: Chem.rdchem.Atom, functional_groups: List[int]
 
 
 def get_atom_features_chemi_net(atom):
+
     """
-    Calculate feature vector for atom.
+    Calculate feature vector for atom. (In the paper: Liu)
     :param atom: atom to featurise
     :return: np.array of attributes - a vector representation of atom
     """
+
     periodic_table = Chem.GetPeriodicTable()
 
     attributes = []
@@ -320,11 +332,13 @@ def get_atom_features_chemi_net(atom):
 
 
 def get_atom_features_deep_chem_stable(atom):
+
     """
-    Calculate feature vector for atom.
+    Calculate feature vector for atom. (In the paper: Li)
     :param atom: atom to featurise
     :return: np.array of attributes - a vector representation of atom
     """
+
     attributes = []
     attributes += one_hot_vector(atom.GetSymbol(), ['C', 'N', 'O', 'S', 'F', 'Si', 'P', 'Cl', 'Br', 'I', 'B', 'H',  'Unknown'])
     attributes += one_hot_vector(atom.GetDegree(), [0, 1, 2, 3, 4, 5])
@@ -346,6 +360,7 @@ def get_atom_features_deep_chem_stable(atom):
 
 
 def get_atom_features_duvenaud(atom):
+
     """
     Calculate feature vector for atom.
     :param atom: atom to featurise
@@ -370,7 +385,9 @@ def get_atom_features_duvenaud(atom):
 
 
 def one_hot_vector(val, lst):
+
     """Converts a value to a one-hot vector based on options in lst"""
+
     if val not in lst:
         val = lst[-1]
     return map(lambda x: x == val, lst)
