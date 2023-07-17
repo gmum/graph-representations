@@ -10,7 +10,7 @@ All configuration files are parsed by methods implemented in `graphrepr.config`.
 These configuration files define preprocessing and cost function for each dataset as well as paths to files with data.
 These paths should be updated to point to correct destinations.
 
-The datasets used in the study can be downloaded as described in Section "Availability of data and materials").
+ESOL (scaffold) and QM9 datasets are provided in the repository while the remaining datasets (including splits) are publicly available and can be obtained as described in Section "Availability of data and materials".
 
 
 ## Model configuration files

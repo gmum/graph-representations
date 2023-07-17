@@ -19,7 +19,7 @@ P-values of one-tailed Wilcoxon tests between the best models trained on each re
 The value in i-th row and j-th column corresponds to the alternative hypothesis saying that the median squared error of i-th representation is greater than the median of j-th representation (superior representations have darker columns, and inferior ones have darker rows). The darkest cells are statistically significant with Bonferroni correction.
 
 
-## How to use this code
+## How to use
 
 ### Environment
 
@@ -43,7 +43,7 @@ We use the following packages:
 ### Running the code
 
 All scripts are in directory `scripts`.
-In the following, we assume the code is run from the repository's root directory. 
+In the following, we assume that the code is run from the repository's root directory. 
 
 
 
