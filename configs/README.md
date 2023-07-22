@@ -3,7 +3,7 @@
 Directories `data` and `representations` contain configuration files required to reproduce the results of the study.
 Directory `models` contains an exemplary configuration file and a script to generate all possible hyperparameter configurations.
 
-All configuration files are parsed by methods implemented in `graphrepr.config`.
+All configuration files are parsed by the methods implemented in `graphrepr/config.py`.
 
 ## Dataset configuration files
 
