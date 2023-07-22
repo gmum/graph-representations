@@ -7,8 +7,7 @@ All configuration files are parsed by methods implemented in `graphrepr.config`.
 
 ## Dataset configuration files
 
-These configuration files define preprocessing and cost function for each dataset as well as paths to files with data.
-These paths should be updated to point to correct destinations.
+These configuration files specify preprocessing, cost function, and data file paths for each dataset. **The paths should be updated to ensure they point to the correct data file destinations.**
 
 ESOL (scaffold) and QM9 datasets are provided in the repository while the remaining datasets (including splits) are publicly available and can be obtained as described in Section "Availability of data and materials".
 
