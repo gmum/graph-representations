@@ -1,6 +1,6 @@
 # Configuration files
 
-Directories `data` and `representation` contain configuration files required to reproduce results of the study.
+Directories `data` and `representations` contain configuration files required to reproduce the results of the study.
 Directory `models` contains an exemplary configuration file and a script to generate all possible hyperparameter configurations.
 
 All configuration files are parsed by methods implemented in `graphrepr.config`.
