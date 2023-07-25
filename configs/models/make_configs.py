@@ -13,7 +13,7 @@ dr = [0.0, 0.2]
 lr = [.01, .001, .0001, .00001, .000001]
 batchnorm = [True, False]
 batchsize = [8, 32, 128]
-scheduler = [-1., 0.5, 0.8] # no scheduler, decrease after half 50% of the epochs, decrease after 80% of the epochs
+scheduler = [-1., 0.5, 0.8]  # no scheduler, decrease after half 50% of the epochs, decrease after 80% of the epochs
 
 model_template = """[PARAMS]
 conv_layers_num: @conv_layers
