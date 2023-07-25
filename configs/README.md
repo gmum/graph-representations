@@ -21,7 +21,7 @@ To create files for all possible configurations, enter `models` directory and us
 python make_configs.py
 ```
 
-In the study, we optimised model hiperparameters using random search. 
+In the study, we optimised model hyperparameters using random search. 
 The same set of 100 architectures was used for experiments on graph convolutional neural networks and D-MPNN.
 This set is comprised of the following architectures:
 
